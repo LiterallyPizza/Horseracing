@@ -1,56 +1,92 @@
-import Papa from "papaparse";
+import type { Config } from "tailwindcss";
 
-export type Race = {
-  date: string;
-  course: string;
-  distance: string;
-  horse: string;
-  jockey: string;
-  trainer: string;
-  position: number | null;
-  odds: string;
-};
-
-const CSV_URL =
-  "https://raw.githubusercontent.com/LiterallyPizza/Horseracing/refs/heads/main/2025.csv";
-
-const norm = (s: string) => s.trim().toLowerCase().replace(/[\s_]+/g, "");
-
-function pick(row: Record<string, string>, keys: string[]): string {
-  const map: Record<string, string> = {};
-  for (const k of Object.keys(row)) map[norm(k)] = row[k];
-  for (const k of keys) {
-    const v = map[norm(k)];
-    if (v !== undefined && v !== null && v !== "") return v;
-  }
-  return "";
-}
-
-export async function fetchRaces(): Promise<Race[]> {
-  const res = await fetch(CSV_URL);
-  if (!res.ok) throw new Error(`Failed to fetch CSV: ${res.status}`);
-  const text = await res.text();
-
-  const parsed = Papa.parse<Record<string, string>>(text, {
-    header: true,
-    skipEmptyLines: true,
-    dynamicTyping: false,
-  });
-
-  return parsed.data
-    .map((row) => {
-      const posRaw = pick(row, ["finish position", "position", "finish", "pos"]);
-      const pos = parseInt(posRaw, 10);
-      return {
-        date: pick(row, ["race date", "date"]),
-        course: pick(row, ["course", "track", "venue"]),
-        distance: pick(row, ["distance"]),
-        horse: pick(row, ["horse name", "horse"]),
-        jockey: pick(row, ["jockey"]),
-        trainer: pick(row, ["trainer"]),
-        position: Number.isFinite(pos) ? pos : null,
-        odds: pick(row, ["odds", "sp", "starting price"]),
-      } as Race;
-    })
-    .filter((r) => r.horse || r.trainer || r.jockey);
-}
+export default {
+  darkMode: ["class"],
+  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  prefix: "",
+  theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
+    extend: {
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+          glow: "hsl(var(--primary-glow))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
+        },
+        "accordion-up": {
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
+    },
+  },
+  plugins: [require("tailwindcss-animate")],
+} satisfies Config;
